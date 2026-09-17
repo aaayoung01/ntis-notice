@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>NTIS공고 클론</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; margin: 40px; background-color: #fdfbf7; }
+        h2 { text-align: center; color: #333; margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 14px 12px; text-align: center; font-size: 14px; }
+        th { background-color: #f8f9fa; color: #333; font-weight: bold; }
+        td.title { text-align: left; }
+        a { text-decoration: none; color: #333; }
+        a:hover { color: #0066cc; text-decoration: underline; }
+        .pagination { text-align: center; margin-top: 30px; }
+        .pagination button { padding: 6px 12px; margin: 0 3px; cursor: pointer; border: 1px solid #ddd; background: #fff; border-radius: 4px; font-weight: bold; color: #555; }
+        .pagination button:hover { background: #f0f0f0; }
+        .pagination button.active { background: #0066cc; color: #fff; border-color: #0066cc; }
+    </style>
+</head>
+<body>
+
+    <h2>NTIS공고</h2>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 8%;">번호</th>
+                <th style="width: 15%;">부처명</th>
+                <th style="width: 37%;">공고명</th>
+                <th style="width: 20%;">공고기관명</th>
+                <th style="width: 10%;">공고일</th>
+                <th style="width: 10%;">공고금액</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            <!-- 데이터가 자바스크립트로 동적 삽입됩니다 -->
+        </tbody>
+    </table>
+
+    <div class="pagination" id="pagination"></div>
+
+    <script>
+        let allData = [];
+        let currentPage = 1;
+        const itemsPerPage = 50; // 한 번에 50개씩 보기
+
+        fetch('data.json')
+            .then(response => response.json())
+            .then(data => {
+                allData = data;
+                displayTable(currentPage);
+                displayPagination();
+            })
+            .catch(error => console.error('데이터 로드 실패:', error));
+
+        function displayTable(page) {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = "";
+            
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedItems = allData.slice(start, end);
+
+            paginatedItems.forEach((item, index) => {
+                const row = document.createElement('tr');
+                const itemNum = allData.length - (start + index); // 최신 글부터 번호 부여
+                
+                row.innerHTML = `
+                    <td>${itemNum}</td>
+                    <td>${item.department}</td>
+                    <td class="title"><a href="${item.link}" target="_blank">${item.title}</a></td>
+                    <td>${item.agency}</td>
+                    <td>${item.date}</td>
+                    <td>${item.amount}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function displayPagination() {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = "";
+            const totalPages = Math.ceil(allData.length / itemsPerPage);
+            if (totalPages <= 1) return;
+
+            // '처음' 버튼
+            let firstBtn = document.createElement('button');
+            firstBtn.innerText = "처음";
+            firstBtn.onclick = () => { currentPage = 1; displayTable(currentPage); displayPagination(); };
+            pagination.appendChild(firstBtn);
+
+            // '이전' 버튼
+            let prevBtn = document.createElement('button');
+            prevBtn.innerText = "이전";
+            prevBtn.onclick = () => { if(currentPage > 1) { currentPage--; displayTable(currentPage); displayPagination(); } };
+            pagination.appendChild(prevBtn);
+
+            // 페이지 번호 버튼들
+            for (let i = 1; i <= totalPages; i++) {
+                let pageBtn = document.createElement('button');
+                pageBtn.innerText = i;
+                if (i === currentPage) pageBtn.classList.add('active');
+                pageBtn.onclick = () => { currentPage = i; displayTable(currentPage); displayPagination(); };
+                pagination.appendChild(pageBtn);
+            }
+
+            // '다음' 버튼
+            let nextBtn = document.createElement('button');
+            nextBtn.innerText = "다음";
+            nextBtn.onclick = () => { if(currentPage < totalPages) { currentPage++; displayTable(currentPage); displayPagination(); } };
+            pagination.appendChild(nextBtn);
+
+            // '끝' 버튼
+            let lastBtn = document.createElement('button');
+            lastBtn.innerText = "끝";
+            lastBtn.onclick = () => { currentPage = totalPages; displayTable(currentPage); displayPagination(); };
+            pagination.appendChild(lastBtn);
+        }
+    </script>
+</body>
+</html>
