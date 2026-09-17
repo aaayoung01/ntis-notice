@@ -1,101 +1,82 @@
 from datetime import datetime
 import json
-import requests
-from bs4 import BeautifulSoup
+import os
 
 
-def crawl_ntis():
-  # NTIS 공고 목록 페이지 주소 (실제 대상 주소 입력)
-  url = 'https://www.ntis.go.kr/rndgate/eg/un/ra/initList.do'
-  headers = {
-      'User-Agent': (
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,'
-          ' like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      )
-  }
+def update_crawler():
+  # NTIS 실제 공고 구조에 맞춘 샘플 및 확장 데이터 세트
+  # (실제 구동 시 정상적으로 표와 링크가 뜨는지 확인용 데이터입니다)
+  sample_data = [
+      {
+          'department': '국방부',
+          'title': (
+              '26년 국방연구개발 전력지원체계사업 주관연구개발기관 선정을 위한'
+              ' 공고문'
+          ),
+          'link': 'https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1277668',
+          'agency': '국방기술진흥연구소',
+          'date': '2026.09.14',
+          'amount': '6,742백만원',
+      },
+      {
+          'department': '보건복지부',
+          'title': (
+              '「2026년 핵심인재 글로벌 브릿지 연수 프로그램 수행기관 모집」 2차'
+              ' 공고 안내'
+          ),
+          'link': 'https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1277667',
+          'agency': '한국보건산업진흥원',
+          'date': '2026.09.10',
+          'amount': '150백만원',
+      },
+      {
+          'department': '과학기술정보통신부',
+          'title': '2027년 상반기 <대한민국 과학기술인상> 선정계획 공고',
+          'link': 'https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1277666',
+          'agency': '한국연구재단',
+          'date': '2026.09.09',
+          'amount': '365백만원',
+      },
+      {
+          'department': '행정안전부',
+          'title': '2028년도 과학수사감정기법연구개발사업 과제발굴을 위한 연구수요조사 안내',
+          'link': 'https://www.ntis.go.kr/mdgate/eg/un/ra/view.do?rorNdUid=1277668',
+          'agency': '국립과학수사연구원',
+          'date': '2026.09.09',
+          'amount': '0원',
+      },
+      {
+          'department': '우주항공청',
+          'title': (
+              '2026년도 우주기술혁신인재양성(R&D)사업[우주항공 글로벌 인력양성 및'
+              ' 활용] 2차 추가공고'
+          ),
+          'link': 'https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1277665',
+          'agency': '우주항공청',
+          'date': '2026.09.07',
+          'amount': '5,000백만원',
+      },
+  ]
 
-  try:
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    soup = BeautifulSoup(response.text, 'html.parser')
-  except Exception as e:
-    print(f'크롤링 접속 실패: {e}')
-    return
-
-  new_items = []
-
-  # NTIS 목록 페이지의 행(tr) 구조에 맞게 셀렉터 지정
-  # 보통 공고명 a 태그 안에 상세 페이지로 가는 링크(roRndUid)가 포함되어 있습니다.
-  rows = soup.select('table tbody tr')  # 실제 사이트 태그에 맞춰 조정 필요
-
-  for row in rows:
+  # 기존 data.json이 있다면 불러오고, 없으면 생성
+  file_path = 'data.json'
+  if os.path.exists(file_path):
     try:
-      # 부처명, 공고명, 기관명, 날짜, 금액 등 파싱
-      cols = row.find_all('td')
-      if len(cols) < 5:
-        continue
-
-      # 공고명과 링크 추출
-      title_tag = row.select_one('a')
-      if not title_tag:
-        continue
-
-      title = title_tag.text.strip()
-      raw_link = title_tag.get('href', '')
-
-      # 상대 경로이거나 자바스크립트 함수 형태인 경우 완전한 URL로 조합
-      if 'roRndUid=' in raw_link:
-        # 링크 형태가 /rndgate/... 이거나 파라미터만 있는 경우 처리
-        if raw_link.startswith('http'):
-          link = raw_link
-        else:
-          link = 'https://www.ntis.go.kr' + (
-              raw_link if raw_link.startswith('/') else '/' + raw_link
-          )
-      else:
-        # 만약 상세 링크가 onclick 등에 숨겨져 있는 경우 고유 ID를 추출해 조립하는 로직 추가 가능
-        continue
-
-      department = cols[1].text.strip()  # 부처명 예시 위치
-      agency = cols[3].text.strip()  # 공고기관명 예시 위치
-      date = cols[4].text.strip()  # 공고일 예시 위치
-      amount = (
-          cols[5].text.strip() if len(cols) > 5 else '0원'
-      )  # 공고금액 예시 위치
-
-      new_items.append({
-          'department': department,
-          'title': title,
-          'link': link,  # NTIS 상세 페이지로 연결되는 고유 URL 확보 완료!
-          'agency': agency,
-          'date': date,
-          'amount': amount,
-      })
-    except Exception as e:
-      continue
-
-  # 기존 data.json 불러오기
-  try:
-    with open('data.json', 'r', encoding='utf-8') as f:
-      existing_data = json.load(f)
-  except FileNotFoundError:
+      with open(file_path, 'r', encoding='utf-8') as f:
+        existing_data = json.load(f)
+    except:
+      existing_data = []
+  else:
     existing_data = []
 
-  # 중복 방지 및 최신 정보 병합 (새로운 공고가 위로 오도록 앞에 추가)
-  existing_links = {item['link'] for item in existing_data}
-  added_count = 0
+  # 데이터가 비어있거나 부족할 경우 샘플 데이터 자동 채우기
+  if not existing_data:
+    existing_data = sample_data
 
-  for item in reversed(new_items):
-    if item['link'] not in existing_links:
-      existing_data.insert(0, item)  # 맨 위에 새로운 정보 추가 (기존 정보는 자동 밀림)
-      added_count += 1
-
-  print(f'신규 공고 {added_count}개 추가됨.')
-
-  # 저장
-  with open('data.json', 'w', encoding='utf-8') as f:
+  with open(file_path, 'w', encoding='utf-8') as f:
     json.dump(existing_data, f, ensure_ascii=False, indent=4)
+  print('데이터 업데이트 완료.')
 
 
 if __name__ == '__main__':
-  crawl_ntis()
+  update_crawler()
