@@ -1,82 +1,72 @@
-from datetime import datetime
 import json
-import os
+import time
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
-
-def update_crawler():
-  # NTIS 실제 공고 구조에 맞춘 샘플 및 확장 데이터 세트
-  # (실제 구동 시 정상적으로 표와 링크가 뜨는지 확인용 데이터입니다)
-  sample_data = [
-      {
-          'department': '국방부',
-          'title': (
-              '26년 국방연구개발 전력지원체계사업 주관연구개발기관 선정을 위한'
-              ' 공고문'
-          ),
-          'link': 'https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1277668',
-          'agency': '국방기술진흥연구소',
-          'date': '2026.09.14',
-          'amount': '6,742백만원',
-      },
-      {
-          'department': '보건복지부',
-          'title': (
-              '「2026년 핵심인재 글로벌 브릿지 연수 프로그램 수행기관 모집」 2차'
-              ' 공고 안내'
-          ),
-          'link': 'https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1277667',
-          'agency': '한국보건산업진흥원',
-          'date': '2026.09.10',
-          'amount': '150백만원',
-      },
-      {
-          'department': '과학기술정보통신부',
-          'title': '2027년 상반기 <대한민국 과학기술인상> 선정계획 공고',
-          'link': 'https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1277666',
-          'agency': '한국연구재단',
-          'date': '2026.09.09',
-          'amount': '365백만원',
-      },
-      {
-          'department': '행정안전부',
-          'title': '2028년도 과학수사감정기법연구개발사업 과제발굴을 위한 연구수요조사 안내',
-          'link': 'https://www.ntis.go.kr/mdgate/eg/un/ra/view.do?rorNdUid=1277668',
-          'agency': '국립과학수사연구원',
-          'date': '2026.09.09',
-          'amount': '0원',
-      },
-      {
-          'department': '우주항공청',
-          'title': (
-              '2026년도 우주기술혁신인재양성(R&D)사업[우주항공 글로벌 인력양성 및'
-              ' 활용] 2차 추가공고'
-          ),
-          'link': 'https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1277665',
-          'agency': '우주항공청',
-          'date': '2026.09.07',
-          'amount': '5,000백만원',
-      },
-  ]
-
-  # 기존 data.json이 있다면 불러오고, 없으면 생성
-  file_path = 'data.json'
-  if os.path.exists(file_path):
+def crawl_real_ntis():
+    # 깃허브 서버용 가상 크롬 브라우저 설정
+    options = Options()
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    
+    driver = webdriver.Chrome(options=options)
+    url = 'https://www.ntis.go.kr/rndgate/eg/un/ra/initList.do'
+    
     try:
-      with open(file_path, 'r', encoding='utf-8') as f:
-        existing_data = json.load(f)
-    except:
-      existing_data = []
-  else:
-    existing_data = []
+        driver.get(url)
+        # 자바스크립트로 표가 화면에 그려질 때까지 최대 10초 대기
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "table tbody tr"))
+        )
+        time.sleep(2) # 데이터 로딩 안정화 대기
+        
+        data = []
+        rows = driver.find_elements(By.CSS_SELECTOR, 'table tbody tr')
+        
+        for row in rows:
+            cols = row.find_elements(By.TAG_NAME, 'td')
+            if len(cols) < 5:
+                continue
+                
+            a_tag = row.find_element(By.TAG_NAME, 'a')
+            title = a_tag.text.strip()
+            
+            # 실제 링크가 숨겨진 onclick 속성이나 href 속성 추출
+            raw_href = a_tag.get_attribute('href')
+            raw_onclick = a_tag.get_attribute('onclick')
+            
+            link = "#"
+            if raw_href and "javascript" not in raw_href:
+                link = raw_href
+            elif raw_onclick:
+                # onclick="fnView('실제번호')" 형태에서 숫자만 빼내어 진짜 주소 조립
+                import re
+                match = re.search(r"\'(\d+)\'", raw_onclick)
+                if match:
+                    real_id = match.group(1)
+                    link = f"https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid={real_id}"
 
-  # 데이터가 비어있거나 부족할 경우 샘플 데이터 자동 채우기
-  if not existing_data:
-    existing_data = sample_data
-
-  with open(file_path, 'w', encoding='utf-8') as f:
-    json.dump(existing_data, f, ensure_ascii=False, indent=4)
-  print('데이터 업데이트 완료.')
-
+            data.append({
+                'department': cols[1].text.strip(),
+                'title': title,
+                'link': link,
+                'agency': cols[3].text.strip(),
+                'date': cols[4].text.strip(),
+                'amount': cols[5].text.strip() if len(cols) > 5 else '0'
+            })
+            
+        # 추출한 진짜 데이터를 json 파일에 저장
+        with open('data.json', 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+            
+    except Exception as e:
+        print(f"크롤링 에러 발생: {e}")
+    finally:
+        driver.quit()
 
 if __name__ == '__main__':
-  update_crawler()
+    crawl_real_ntis()
