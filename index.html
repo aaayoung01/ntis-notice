@@ -2,16 +2,17 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>NTIS공고 클론</title>
+    <title>NTIS공고</title>
     <style>
-        body { font-family: 'Malgun Gothic', sans-serif; margin: 40px; background-color: #fdfbf7; }
+        body { font-family: 'Malgun Gothic', sans-serif; margin: 40px; background-color: #fff; }
         h2 { text-align: center; color: #333; margin-bottom: 30px; }
-        table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        th, td { border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 14px 12px; text-align: center; font-size: 13px; }
-        th { background-color: #f8f9fa; color: #333; font-weight: bold; }
-        td.title { text-align: left; }
-        a { text-decoration: none; color: #333; }
-        a:hover { color: #0066cc; text-decoration: underline; }
+        .table-container { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+        th { border-top: 1px solid #ccc; border-bottom: 1px solid #eee; padding: 12px 10px; color: #555; font-size: 14px; font-weight: normal; }
+        td { border-bottom: 1px solid #eee; padding: 14px 10px; text-align: center; font-size: 14px; color: #333; }
+        td.title { text-align: left; font-weight: 600; color: #111; }
+        td.title a { color: #111; text-decoration: none; }
+        td.title a:hover { text-decoration: underline; }
         .pagination { text-align: center; margin-top: 30px; }
         .pagination button { padding: 6px 12px; margin: 0 3px; cursor: pointer; border: 1px solid #ddd; background: #fff; border-radius: 4px; font-weight: bold; color: #555; }
         .pagination button:hover { background: #f0f0f0; }
@@ -21,21 +22,23 @@
 <body>
 
     <h2>NTIS공고</h2>
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 6%;">번호</th>
-                <th style="width: 12%;">부처명</th>
-                <th style="width: 33%;">공고명</th>
-                <th style="width: 16%;">공고기관명</th>
-                <th style="width: 9%;">공고일</th>
-                <th style="width: 16%;">접수기간</th>
-                <th style="width: 8%;">공고금액</th>
-            </tr>
-        </thead>
-        <tbody id="table-body">
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 5%;">번호</th>
+                    <th style="width: 12%;">부처명</th>
+                    <th style="width: 38%;">공고명</th>
+                    <th style="width: 15%;">공고기관명</th>
+                    <th style="width: 10%;">공고일</th>
+                    <th style="width: 12%;">접수기간</th>
+                    <th style="width: 8%;">공고금액</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+            </tbody>
+        </table>
+    </div>
 
     <div class="pagination" id="pagination"></div>
 
@@ -70,14 +73,21 @@
                 const row = document.createElement('tr');
                 const itemNum = allData.length - (start + index);
                 
+                // 데이터가 없는 경우 하이픈(-)을 빈칸으로 변환
+                let amountDisplay = item.amount || "";
+                if (amountDisplay === "-") amountDisplay = "";
+
+                let periodDisplay = item.appPeriod || "";
+                if (periodDisplay === "-") periodDisplay = "";
+
                 row.innerHTML = `
                     <td>${itemNum}</td>
                     <td>${item.department}</td>
                     <td class="title"><a href="${item.link}" target="_blank">${item.title}</a></td>
                     <td>${item.agency}</td>
                     <td>${item.date}</td>
-                    <td>${item.appPeriod}</td>
-                    <td>${item.amount}</td>
+                    <td>${periodDisplay}</td>
+                    <td>${amountDisplay}</td>
                 `;
                 tbody.appendChild(row);
             });
@@ -88,7 +98,6 @@
             pagination.innerHTML = "";
             const totalPages = Math.ceil(allData.length / itemsPerPage);
             
-            // 데이터가 50개 이하일 경우 페이지네이션 숨김
             if (totalPages <= 1) return;
 
             let firstBtn = document.createElement('button');
