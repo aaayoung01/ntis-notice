@@ -7,7 +7,7 @@
         body { font-family: 'Malgun Gothic', sans-serif; margin: 40px; background-color: #fdfbf7; }
         h2 { text-align: center; color: #333; margin-bottom: 30px; }
         table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        th, td { border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 14px 12px; text-align: center; font-size: 14px; }
+        th, td { border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 14px 12px; text-align: center; font-size: 13px; }
         th { background-color: #f8f9fa; color: #333; font-weight: bold; }
         td.title { text-align: left; }
         a { text-decoration: none; color: #333; }
@@ -24,16 +24,16 @@
     <table>
         <thead>
             <tr>
-                <th style="width: 8%;">번호</th>
-                <th style="width: 15%;">부처명</th>
-                <th style="width: 37%;">공고명</th>
-                <th style="width: 20%;">공고기관명</th>
-                <th style="width: 10%;">공고일</th>
-                <th style="width: 10%;">공고금액</th>
+                <th style="width: 6%;">번호</th>
+                <th style="width: 12%;">부처명</th>
+                <th style="width: 33%;">공고명</th>
+                <th style="width: 16%;">공고기관명</th>
+                <th style="width: 9%;">공고일</th>
+                <th style="width: 16%;">접수기간</th>
+                <th style="width: 8%;">공고금액</th>
             </tr>
         </thead>
         <tbody id="table-body">
-            <!-- 데이터가 자바스크립트로 동적 삽입됩니다 -->
         </tbody>
     </table>
 
@@ -62,7 +62,7 @@
             const paginatedItems = allData.slice(start, end);
 
             if (paginatedItems.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; color: #888;">등록된 공고 데이터가 없습니다.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" style="padding: 20px; color: #888;">등록된 공고 데이터가 없습니다.</td></tr>`;
                 return;
             }
 
@@ -76,6 +76,7 @@
                     <td class="title"><a href="${item.link}" target="_blank">${item.title}</a></td>
                     <td>${item.agency}</td>
                     <td>${item.date}</td>
+                    <td>${item.appPeriod}</td>
                     <td>${item.amount}</td>
                 `;
                 tbody.appendChild(row);
@@ -86,6 +87,8 @@
             const pagination = document.getElementById('pagination');
             pagination.innerHTML = "";
             const totalPages = Math.ceil(allData.length / itemsPerPage);
+            
+            // 데이터가 50개 이하일 경우 페이지네이션 숨김
             if (totalPages <= 1) return;
 
             let firstBtn = document.createElement('button');
