@@ -6,18 +6,28 @@
     <style>
         body { font-family: 'Malgun Gothic', sans-serif; margin: 40px; background-color: #fff; }
         h2 { text-align: center; color: #333; margin-bottom: 20px; }
-        .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .filter-select { padding: 8px 12px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; outline: none; }
+        
+        /* 필터 표 영역 디자인 */
+        .filter-box { width: 100%; border: 2px solid #ccc; margin-bottom: 20px; }
+        .filter-ui-table { width: 100%; border-collapse: collapse; }
+        .filter-ui-table th, .filter-ui-table td { border: 1px solid #ddd; padding: 12px 10px; text-align: center; font-size: 13px; color: #333; }
+        .filter-header { width: 120px; background-color: #f4f4f4; font-weight: bold; }
+        .filter-status, .filter-dept { cursor: pointer; background-color: #fff; transition: 0.2s; user-select: none; }
+        .filter-status:hover, .filter-dept:hover { background-color: #f9f9f9; }
+        /* 선택된 탭 스타일 (주황색) */
+        .filter-status.active, .filter-dept.active { background-color: #f36c21; color: #fff; font-weight: bold; border-color: #f36c21; }
+
         .table-container { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 1100px; }
-        th { border-top: 1px solid #ccc; border-bottom: 1px solid #eee; padding: 12px 8px; color: #555; font-size: 13px; font-weight: normal; user-select: none; }
+        table.data-table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+        table.data-table th { border-top: 1px solid #ccc; border-bottom: 1px solid #eee; padding: 12px 8px; color: #555; font-size: 13px; font-weight: normal; user-select: none; }
         th.sortable { cursor: pointer; color: #0066cc; font-weight: bold; }
         th.sortable:hover { text-decoration: underline; background-color: #f9f9f9; }
-        td { border-bottom: 1px solid #eee; padding: 14px 8px; text-align: center; font-size: 13px; color: #333; }
-        td.title { text-align: left; font-weight: 600; color: #111; }
-        td.title a { color: #111; text-decoration: none; }
-        td.title a:hover { text-decoration: underline; }
+        table.data-table td { border-bottom: 1px solid #eee; padding: 14px 8px; text-align: center; font-size: 13px; color: #333; }
+        table.data-table td.title { text-align: left; font-weight: 600; color: #111; }
+        table.data-table td.title a { color: #111; text-decoration: none; }
+        table.data-table td.title a:hover { text-decoration: underline; }
         
+        /* 배지 디자인 */
         .status { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: #fff; display: inline-block; width: 60px; text-align: center; }
         .status.open { background-color: #007bff; }
         .status.upcoming { background-color: #ff9800; }
@@ -27,7 +37,6 @@
 
         .pagination { text-align: center; margin-top: 30px; }
         .pagination button { padding: 6px 12px; margin: 0 3px; cursor: pointer; border: 1px solid #ddd; background: #fff; border-radius: 4px; font-weight: bold; color: #555; }
-        .pagination button:hover { background: #f0f0f0; }
         .pagination button.active { background: #0066cc; color: #fff; border-color: #0066cc; }
     </style>
 </head>
@@ -35,18 +44,36 @@
 
     <h2>NTIS공고</h2>
     
-    <div class="controls">
-        <select id="statusFilter" class="filter-select" onchange="applyFilters()">
-            <option value="전체">상태 필터: 전체</option>
-            <option value="접수중">접수중</option>
-            <option value="접수예정">접수예정</option>
-            <option value="접수마감">접수마감</option>
-        </select>
-        <span style="font-size: 13px; color: #666;">※ D-Day 클릭 시 마감임박/여유순 정렬</span>
+    <div class="filter-box">
+        <table class="filter-ui-table">
+            <tr>
+                <th class="filter-header">공고현황</th>
+                <td class="filter-status active" data-val="전체" onclick="setStatus('전체')">전체</td>
+                <td class="filter-status" data-val="접수예정" onclick="setStatus('접수예정')">접수예정</td>
+                <td class="filter-status" data-val="접수중" onclick="setStatus('접수중')">접수중</td>
+                <td class="filter-status" data-val="접수마감" onclick="setStatus('접수마감')">마감</td>
+            </tr>
+        </table>
+        <table class="filter-ui-table" style="border-top: none;">
+            <tr>
+                <th class="filter-header" rowspan="2">부처명</th>
+                <!-- 요청하신 7개 부처 + 전체 (총 8개) 배치 -->
+                <td class="filter-dept active" data-val="전체" onclick="toggleDept('전체')">전체</td>
+                <td class="filter-dept" data-val="과학기술정보통신부" onclick="toggleDept('과학기술정보통신부')">과학기술정보통신부</td>
+                <td class="filter-dept" data-val="교육부" onclick="toggleDept('교육부')">교육부</td>
+                <td class="filter-dept" data-val="보건복지부" onclick="toggleDept('보건복지부')">보건복지부</td>
+            </tr>
+            <tr>
+                <td class="filter-dept" data-val="산업통상부" onclick="toggleDept('산업통상부')">산업통상부</td>
+                <td class="filter-dept" data-val="식품의약품안전처" onclick="toggleDept('식품의약품안전처')">식품의약품안전처</td>
+                <td class="filter-dept" data-val="질병관리청" onclick="toggleDept('질병관리청')">질병관리청</td>
+                <td class="filter-dept" data-val="기타" onclick="toggleDept('기타')">기타</td>
+            </tr>
+        </table>
     </div>
 
     <div class="table-container">
-        <table>
+        <table class="data-table">
             <thead>
                 <tr>
                     <th style="width: 5%;">번호</th>
@@ -74,8 +101,9 @@
         let currentPage = 1;
         const itemsPerPage = 50;
         
-        let currentFilter = "전체";
-        let sortState = 0; // 0: 기본(최신순), 1: 오름차순(마감임박), 2: 내림차순(마감여유)
+        let currentStatus = "전체";
+        let currentDepts = new Set(["전체"]);
+        let sortState = 0; 
 
         fetch('data.json')
             .then(response => response.json())
@@ -124,20 +152,50 @@
                         dDayText = "마감";
                     }
                 }
-
                 return { ...item, originalIndex, status, statusClass, dDayValue, dDayText };
             });
         }
 
-        function applyFilters() {
-            currentFilter = document.getElementById('statusFilter').value;
-            
-            if (currentFilter === "전체") {
-                filteredData = [...processedData];
-            } else {
-                filteredData = processedData.filter(item => item.status === currentFilter);
-            }
+        // 공고현황 단일 선택
+        function setStatus(status) {
+            currentStatus = status;
+            document.querySelectorAll('.filter-status').forEach(el => {
+                el.classList.toggle('active', el.dataset.val === status);
+            });
+            applyFilters();
+        }
 
+        // 부처명 다중 선택 (전체 선택/해제 로직 포함)
+        function toggleDept(dept) {
+            if (dept === "전체") {
+                currentDepts.clear();
+                currentDepts.add("전체");
+            } else {
+                currentDepts.delete("전체");
+                if (currentDepts.has(dept)) {
+                    currentDepts.delete(dept);
+                } else {
+                    currentDepts.add(dept);
+                }
+                // 다 해제되면 다시 '전체'로 복구
+                if (currentDepts.size === 0) {
+                    currentDepts.add("전체");
+                }
+            }
+            
+            document.querySelectorAll('.filter-dept').forEach(el => {
+                el.classList.toggle('active', currentDepts.has(el.dataset.val));
+            });
+            applyFilters();
+        }
+
+        function applyFilters() {
+            filteredData = processedData.filter(item => {
+                const statusMatch = (currentStatus === "전체") || (item.status === currentStatus);
+                const deptMatch = currentDepts.has("전체") || currentDepts.has(item.department);
+                return statusMatch && deptMatch;
+            });
+            currentPage = 1;
             applySort();
         }
 
@@ -147,27 +205,21 @@
             if (sortState === 0) header.innerText = "D-Day ↕";
             else if (sortState === 1) header.innerText = "D-Day ▲";
             else header.innerText = "D-Day ▼";
-            
             applySort();
         }
 
         function applySort() {
             if (sortState === 1) {
-                // 오름차순 (마감임박순)
                 filteredData.sort((a, b) => a.dDayValue - b.dDayValue);
             } else if (sortState === 2) {
-                // 내림차순 (마감여유순)
                 filteredData.sort((a, b) => {
                     if (a.dDayValue === Infinity) return 1;
                     if (b.dDayValue === Infinity) return -1;
                     return b.dDayValue - a.dDayValue;
                 });
             } else {
-                // 기본 (원본 최신순)
                 filteredData.sort((a, b) => a.originalIndex - b.originalIndex);
             }
-            
-            currentPage = 1;
             displayTable();
             displayPagination();
         }
