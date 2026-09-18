@@ -5,14 +5,26 @@
     <title>NTIS공고</title>
     <style>
         body { font-family: 'Malgun Gothic', sans-serif; margin: 40px; background-color: #fff; }
-        h2 { text-align: center; color: #333; margin-bottom: 30px; }
+        h2 { text-align: center; color: #333; margin-bottom: 20px; }
+        .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .filter-select { padding: 8px 12px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; outline: none; }
         .table-container { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
-        th { border-top: 1px solid #ccc; border-bottom: 1px solid #eee; padding: 12px 10px; color: #555; font-size: 14px; font-weight: normal; }
-        td { border-bottom: 1px solid #eee; padding: 14px 10px; text-align: center; font-size: 14px; color: #333; }
+        table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+        th { border-top: 1px solid #ccc; border-bottom: 1px solid #eee; padding: 12px 8px; color: #555; font-size: 13px; font-weight: normal; user-select: none; }
+        th.sortable { cursor: pointer; color: #0066cc; font-weight: bold; }
+        th.sortable:hover { text-decoration: underline; background-color: #f9f9f9; }
+        td { border-bottom: 1px solid #eee; padding: 14px 8px; text-align: center; font-size: 13px; color: #333; }
         td.title { text-align: left; font-weight: 600; color: #111; }
         td.title a { color: #111; text-decoration: none; }
         td.title a:hover { text-decoration: underline; }
+        
+        .status { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: #fff; display: inline-block; width: 60px; text-align: center; }
+        .status.open { background-color: #007bff; }
+        .status.upcoming { background-color: #ff9800; }
+        .status.closed { background-color: #9e9e9e; }
+        .status.unknown { background-color: #e0e0e0; color: #555; }
+        .dday-text { font-weight: bold; color: #d32f2f; }
+
         .pagination { text-align: center; margin-top: 30px; }
         .pagination button { padding: 6px 12px; margin: 0 3px; cursor: pointer; border: 1px solid #ddd; background: #fff; border-radius: 4px; font-weight: bold; color: #555; }
         .pagination button:hover { background: #f0f0f0; }
@@ -22,17 +34,30 @@
 <body>
 
     <h2>NTIS공고</h2>
+    
+    <div class="controls">
+        <select id="statusFilter" class="filter-select" onchange="applyFilters()">
+            <option value="전체">상태 필터: 전체</option>
+            <option value="접수중">접수중</option>
+            <option value="접수예정">접수예정</option>
+            <option value="접수마감">접수마감</option>
+        </select>
+        <span style="font-size: 13px; color: #666;">※ D-Day 클릭 시 마감임박/여유순 정렬</span>
+    </div>
+
     <div class="table-container">
         <table>
             <thead>
                 <tr>
                     <th style="width: 5%;">번호</th>
+                    <th style="width: 7%;">상태</th>
                     <th style="width: 12%;">부처명</th>
-                    <th style="width: 38%;">공고명</th>
-                    <th style="width: 15%;">공고기관명</th>
-                    <th style="width: 10%;">공고일</th>
-                    <th style="width: 12%;">접수기간</th>
-                    <th style="width: 8%;">공고금액</th>
+                    <th style="width: 31%;">공고명</th>
+                    <th style="width: 14%;">공고기관명</th>
+                    <th style="width: 9%;">공고일</th>
+                    <th style="width: 11%;">접수기간</th>
+                    <th style="width: 6%;" class="sortable" id="ddayHeader" onclick="toggleSort()">D-Day ↕</th>
+                    <th style="width: 7%;">공고금액</th>
                 </tr>
             </thead>
             <tbody id="table-body">
@@ -43,50 +68,141 @@
     <div class="pagination" id="pagination"></div>
 
     <script>
-        let allData = [];
+        let rawData = [];
+        let processedData = [];
+        let filteredData = [];
         let currentPage = 1;
         const itemsPerPage = 50;
+        
+        let currentFilter = "전체";
+        let sortState = 0; // 0: 기본(최신순), 1: 오름차순(마감임박), 2: 내림차순(마감여유)
 
         fetch('data.json')
             .then(response => response.json())
             .then(data => {
-                allData = data;
-                displayTable(currentPage);
-                displayPagination();
+                rawData = data;
+                processData();
+                applyFilters();
             })
             .catch(error => console.error('데이터 로드 실패:', error));
 
-        function displayTable(page) {
+        function processData() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            processedData = rawData.map((item, originalIndex) => {
+                let status = "미상";
+                let statusClass = "unknown";
+                let dDayValue = Infinity;
+                let dDayText = "-";
+
+                if (item.appBegin && item.appDue) {
+                    const beginDate = new Date(item.appBegin.replace(/\./g, '-'));
+                    const dueDate = new Date(item.appDue.replace(/\./g, '-'));
+                    beginDate.setHours(0, 0, 0, 0);
+                    dueDate.setHours(0, 0, 0, 0);
+
+                    const diffTime = dueDate - today;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                    if (today < beginDate) {
+                        status = "접수예정";
+                        statusClass = "upcoming";
+                    } else if (today > dueDate) {
+                        status = "접수마감";
+                        statusClass = "closed";
+                    } else {
+                        status = "접수중";
+                        statusClass = "open";
+                    }
+
+                    if (status !== "접수마감") {
+                        dDayValue = diffDays;
+                        if (diffDays > 0) dDayText = `D-${diffDays}`;
+                        else if (diffDays === 0) dDayText = `D-Day`;
+                    } else {
+                        dDayText = "마감";
+                    }
+                }
+
+                return { ...item, originalIndex, status, statusClass, dDayValue, dDayText };
+            });
+        }
+
+        function applyFilters() {
+            currentFilter = document.getElementById('statusFilter').value;
+            
+            if (currentFilter === "전체") {
+                filteredData = [...processedData];
+            } else {
+                filteredData = processedData.filter(item => item.status === currentFilter);
+            }
+
+            applySort();
+        }
+
+        function toggleSort() {
+            sortState = (sortState + 1) % 3;
+            const header = document.getElementById('ddayHeader');
+            if (sortState === 0) header.innerText = "D-Day ↕";
+            else if (sortState === 1) header.innerText = "D-Day ▲";
+            else header.innerText = "D-Day ▼";
+            
+            applySort();
+        }
+
+        function applySort() {
+            if (sortState === 1) {
+                // 오름차순 (마감임박순)
+                filteredData.sort((a, b) => a.dDayValue - b.dDayValue);
+            } else if (sortState === 2) {
+                // 내림차순 (마감여유순)
+                filteredData.sort((a, b) => {
+                    if (a.dDayValue === Infinity) return 1;
+                    if (b.dDayValue === Infinity) return -1;
+                    return b.dDayValue - a.dDayValue;
+                });
+            } else {
+                // 기본 (원본 최신순)
+                filteredData.sort((a, b) => a.originalIndex - b.originalIndex);
+            }
+            
+            currentPage = 1;
+            displayTable();
+            displayPagination();
+        }
+
+        function displayTable() {
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = "";
             
-            const start = (page - 1) * itemsPerPage;
+            const start = (currentPage - 1) * itemsPerPage;
             const end = start + itemsPerPage;
-            const paginatedItems = allData.slice(start, end);
+            const paginatedItems = filteredData.slice(start, end);
 
             if (paginatedItems.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" style="padding: 20px; color: #888;">등록된 공고 데이터가 없습니다.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" style="padding: 20px; color: #888;">조건에 맞는 공고가 없습니다.</td></tr>`;
                 return;
             }
 
-            paginatedItems.forEach((item, index) => {
+            paginatedItems.forEach(item => {
                 const row = document.createElement('tr');
-                const itemNum = allData.length - (start + index);
+                const itemNum = rawData.length - item.originalIndex;
                 
-                // 데이터가 없는 경우 하이픈(-)을 빈칸으로 변환
                 let amountDisplay = item.amount || "";
                 if (amountDisplay === "-") amountDisplay = "";
-
                 let periodDisplay = item.appPeriod || "";
                 if (periodDisplay === "-") periodDisplay = "";
 
                 row.innerHTML = `
                     <td>${itemNum}</td>
+                    <td><span class="status ${item.statusClass}">${item.status}</span></td>
                     <td>${item.department}</td>
                     <td class="title"><a href="${item.link}" target="_blank">${item.title}</a></td>
                     <td>${item.agency}</td>
                     <td>${item.date}</td>
                     <td>${periodDisplay}</td>
+                    <td class="dday-text">${item.dDayText}</td>
                     <td>${amountDisplay}</td>
                 `;
                 tbody.appendChild(row);
@@ -96,36 +212,36 @@
         function displayPagination() {
             const pagination = document.getElementById('pagination');
             pagination.innerHTML = "";
-            const totalPages = Math.ceil(allData.length / itemsPerPage);
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
             
             if (totalPages <= 1) return;
 
             let firstBtn = document.createElement('button');
             firstBtn.innerText = "처음";
-            firstBtn.onclick = () => { currentPage = 1; displayTable(currentPage); displayPagination(); };
+            firstBtn.onclick = () => { currentPage = 1; displayTable(); displayPagination(); };
             pagination.appendChild(firstBtn);
 
             let prevBtn = document.createElement('button');
             prevBtn.innerText = "이전";
-            prevBtn.onclick = () => { if(currentPage > 1) { currentPage--; displayTable(currentPage); displayPagination(); } };
+            prevBtn.onclick = () => { if(currentPage > 1) { currentPage--; displayTable(); displayPagination(); } };
             pagination.appendChild(prevBtn);
 
             for (let i = 1; i <= totalPages; i++) {
                 let pageBtn = document.createElement('button');
                 pageBtn.innerText = i;
                 if (i === currentPage) pageBtn.classList.add('active');
-                pageBtn.onclick = () => { currentPage = i; displayTable(currentPage); displayPagination(); };
+                pageBtn.onclick = () => { currentPage = i; displayTable(); displayPagination(); };
                 pagination.appendChild(pageBtn);
             }
 
             let nextBtn = document.createElement('button');
             nextBtn.innerText = "다음";
-            nextBtn.onclick = () => { if(currentPage < totalPages) { currentPage++; displayTable(currentPage); displayPagination(); } };
+            nextBtn.onclick = () => { if(currentPage < totalPages) { currentPage++; displayTable(); displayPagination(); } };
             pagination.appendChild(nextBtn);
 
             let lastBtn = document.createElement('button');
             lastBtn.innerText = "끝";
-            lastBtn.onclick = () => { currentPage = totalPages; displayTable(currentPage); displayPagination(); };
+            lastBtn.onclick = () => { currentPage = totalPages; displayTable(); displayPagination(); };
             pagination.appendChild(lastBtn);
         }
     </script>
