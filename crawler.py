@@ -1,72 +1,46 @@
 import json
-import time
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+import requests
+import xml.etree.ElementTree as ET
 
-def crawl_real_ntis():
-    # 깃허브 서버용 가상 크롬 브라우저 설정
-    options = Options()
-    options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    
-    driver = webdriver.Chrome(options=options)
-    url = 'https://www.ntis.go.kr/rndgate/eg/un/ra/initList.do'
+def update_rss_data():
+    # 안내받은 공식 RSS 주소 (최대 100개 호출)
+    url = 'http://www.ntis.go.kr/rndgate/unRndRss.xml?prt=100'
     
     try:
-        driver.get(url)
-        # 자바스크립트로 표가 화면에 그려질 때까지 최대 10초 대기
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "table tbody tr"))
-        )
-        time.sleep(2) # 데이터 로딩 안정화 대기
+        response = requests.get(url)
+        response.raise_for_status()
         
-        data = []
-        rows = driver.find_elements(By.CSS_SELECTOR, 'table tbody tr')
+        # XML(RSS) 데이터 파싱
+        root = ET.fromstring(response.content)
         
-        for row in rows:
-            cols = row.find_elements(By.TAG_NAME, 'td')
-            if len(cols) < 5:
-                continue
-                
-            a_tag = row.find_element(By.TAG_NAME, 'a')
-            title = a_tag.text.strip()
+        items = []
+        # RSS 규격에 따라 item 태그 안의 정보를 반복해서 찾음
+        for item in root.findall('.//item'):
+            title = item.findtext('title', default='제목 없음')
+            link = item.findtext('link', default='#')
+            department = item.findtext('author', default='')
+            agency = item.findtext('category', default='')
+            date = item.findtext('pubDate', default='')
+            amount = item.findtext('budget', default='')
             
-            # 실제 링크가 숨겨진 onclick 속성이나 href 속성 추출
-            raw_href = a_tag.get_attribute('href')
-            raw_onclick = a_tag.get_attribute('onclick')
-            
-            link = "#"
-            if raw_href and "javascript" not in raw_href:
-                link = raw_href
-            elif raw_onclick:
-                # onclick="fnView('실제번호')" 형태에서 숫자만 빼내어 진짜 주소 조립
-                import re
-                match = re.search(r"\'(\d+)\'", raw_onclick)
-                if match:
-                    real_id = match.group(1)
-                    link = f"https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid={real_id}"
-
-            data.append({
-                'department': cols[1].text.strip(),
+            # 기존 화면 코드(index.html)와 완벽히 호환되도록 영어 키값 맞춤
+            items.append({
+                'department': department,
                 'title': title,
                 'link': link,
-                'agency': cols[3].text.strip(),
-                'date': cols[4].text.strip(),
-                'amount': cols[5].text.strip() if len(cols) > 5 else '0'
+                'agency': agency,
+                'date': date,
+                'amount': amount
             })
             
-        # 추출한 진짜 데이터를 json 파일에 저장
+        # 가져온 데이터를 data.json 파일로 저장
         with open('data.json', 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=4)
+            json.dump(items, f, ensure_ascii=False, indent=4)
+            
+        print(f"총 {len(items)}개의 공고 데이터를 성공적으로 가져왔습니다.")
             
     except Exception as e:
-        print(f"크롤링 에러 발생: {e}")
-    finally:
-        driver.quit()
+        print(f"데이터 수집 중 오류 발생: {e}")
 
 if __name__ == '__main__':
-    crawl_real_ntis()
+    update_rss_data()
