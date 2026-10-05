@@ -1,6 +1,39 @@
 [
     {
         "department": "산업통상부",
+        "title": "[ 미래전략산업 대응 뿌리기술개발사업 ] 기획을 위한 기술수요조사",
+        "link": "https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1279525",
+        "agency": "한국산업기술기획평가원",
+        "date": "2026.10.02",
+        "appPeriod": "2026.10.02 ~ 2026.10.15",
+        "appBegin": "2026.10.02",
+        "appDue": "2026.10.15",
+        "amount": "0원"
+    },
+    {
+        "department": "보건복지부",
+        "title": "2026년도 한의약혁신기술개발사업 사업단장 공모안내",
+        "link": "https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1279523",
+        "agency": "한국보건산업진흥원",
+        "date": "2026.10.02",
+        "appPeriod": "2026.10.02 ~ 2026.11.02",
+        "appBegin": "2026.10.02",
+        "appDue": "2026.11.02",
+        "amount": "157,590백만원"
+    },
+    {
+        "department": "과학기술정보통신부",
+        "title": "2026년도 제4차 과학기술분야 연구기획과제 공모",
+        "link": "https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1279317",
+        "agency": "한국연구재단",
+        "date": "2026.10.01",
+        "appPeriod": "2026.10.01 ~ 2026.10.14",
+        "appBegin": "2026.10.01",
+        "appDue": "2026.10.14",
+        "amount": "570백만원"
+    },
+    {
+        "department": "산업통상부",
         "title": "핵심광물 공급망 안정화 전주기 기술개발사업 기술수요조사 공고",
         "link": "https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1278938",
         "agency": "한국산업기술기획평가원",
