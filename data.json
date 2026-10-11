@@ -1,5 +1,93 @@
 [
     {
+        "department": "과학기술정보통신부",
+        "title": "2026년 지역거점 AX 혁신 기술개발 사업 신규지원 대상과제 공고(표준모델 AX R&D)",
+        "link": "https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1279968",
+        "agency": "정보통신산업진흥원",
+        "date": "2026.10.08",
+        "appPeriod": "2026.10.26 ~ 2026.11.09",
+        "appBegin": "2026.10.26",
+        "appDue": "2026.11.09",
+        "amount": "228,600백만원"
+    },
+    {
+        "department": "산업통상부",
+        "title": "2027년도 제품안전관리기술개발및실증사업 기술수요조사 공고",
+        "link": "https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1279833",
+        "agency": "한국산업기술기획평가원",
+        "date": "2026.10.08",
+        "appPeriod": "2026.10.08 ~ 2026.11.06",
+        "appBegin": "2026.10.08",
+        "appDue": "2026.11.06",
+        "amount": "0원"
+    },
+    {
+        "department": "산업통상부",
+        "title": "2027년도 제조공급망강화표준물질개발사업 기술수요조사 공고",
+        "link": "https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1279830",
+        "agency": "한국산업기술기획평가원",
+        "date": "2026.10.08",
+        "appPeriod": "2026.10.08 ~ 2026.11.04",
+        "appBegin": "2026.10.08",
+        "appDue": "2026.11.04",
+        "amount": "0원"
+    },
+    {
+        "department": "보건복지부",
+        "title": "2026년 지역거점 AX 혁신 기술개발 사업 신규지원 대상과제 공고 안내",
+        "link": "https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1279831",
+        "agency": "한국보건산업진흥원",
+        "date": "2026.10.07",
+        "appPeriod": "2026.10.07 ~ 2026.12.31",
+        "appBegin": "2026.10.07",
+        "appDue": "2026.12.31",
+        "amount": "78,167백만원"
+    },
+    {
+        "department": "과학기술정보통신부",
+        "title": "2026년도 퀀텀(양자)플랫폼 KIST 양자기술활용연구거점사업단 양자공동연구실(JQL) 신규과제 공모",
+        "link": "https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1279603",
+        "agency": "한국연구재단",
+        "date": "2026.10.06",
+        "appPeriod": "2026.10.06 ~ 2026.11.05",
+        "appBegin": "2026.10.06",
+        "appDue": "2026.11.05",
+        "amount": "270백만원"
+    },
+    {
+        "department": "과학기술정보통신부",
+        "title": "2026년도 퀀텀(양자)플랫폼 KRISS 차세대양자연구거점사업단 양자공동연구실(JQL) 신규과제 공모",
+        "link": "https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1279602",
+        "agency": "한국연구재단",
+        "date": "2026.10.06",
+        "appPeriod": "2026.10.06 ~ 2026.11.05",
+        "appBegin": "2026.10.06",
+        "appDue": "2026.11.05",
+        "amount": "270백만원"
+    },
+    {
+        "department": "과학기술정보통신부",
+        "title": "2026년도 퀀텀(양자)플랫폼 KRISS 차세대양자연구거점사업단 차세대양자연구거점사업단양자공동연구실(JQL) 신규과제 공모",
+        "link": "https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1279599",
+        "agency": "한국연구재단",
+        "date": "2026.10.06",
+        "appPeriod": "2026.10.06 ~ 2026.11.05",
+        "appBegin": "2026.10.06",
+        "appDue": "2026.11.05",
+        "amount": "903백만원"
+    },
+    {
+        "department": "과학기술정보통신부",
+        "title": "2026년도 퀀텀(양자)플랫폼 KIST 양자활용연구거점사업단 양자공동연구실(JQL) 신규과제 공모",
+        "link": "https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1279596",
+        "agency": "한국연구재단",
+        "date": "2026.10.06",
+        "appPeriod": "2026.10.06 ~ 2026.11.05",
+        "appBegin": "2026.10.06",
+        "appDue": "2026.11.05",
+        "amount": "1,806백만원"
+    },
+    {
         "department": "산업통상부",
         "title": "[ 미래전략산업 대응 뿌리기술개발사업 ] 기획을 위한 기술수요조사",
         "link": "https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1279525",
