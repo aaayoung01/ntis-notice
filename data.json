@@ -1,6 +1,61 @@
 [
     {
         "department": "과학기술정보통신부",
+        "title": "「K-문샷 AI 과학자 미션 분야 특화 확산을 위한 협력사업 기획 연구」 정책연구과제 공고",
+        "link": "https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1283767",
+        "agency": "국가과학기술연구회",
+        "date": "2026.11.23",
+        "appPeriod": "2026.11.23 ~ 2026.12.03",
+        "appBegin": "2026.11.23",
+        "appDue": "2026.12.03",
+        "amount": "80백만원"
+    },
+    {
+        "department": "과학기술정보통신부",
+        "title": "「K-문샷 반도체 미션 성과제고를 위한 연구모델 기획 연구」 정책연구과제 재공고",
+        "link": "https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1283614",
+        "agency": "국가과학기술연구회",
+        "date": "2026.11.20",
+        "appPeriod": "2026.11.20 ~ 2026.11.25",
+        "appBegin": "2026.11.20",
+        "appDue": "2026.11.25",
+        "amount": "80백만원"
+    },
+    {
+        "department": "보건복지부",
+        "title": "2027년도 국립보건연구원 신규 연구용역과제(학술) 입찰 통합공고 ",
+        "link": "https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1283612",
+        "agency": "한국보건산업진흥원",
+        "date": "2026.11.20",
+        "appPeriod": "2026.11.20 ~ 2026.12.01",
+        "appBegin": "2026.11.20",
+        "appDue": "2026.12.01",
+        "amount": "100백만원"
+    },
+    {
+        "department": "과학기술정보통신부",
+        "title": "2026년도 제5차 과학기술분야 연구기획과제 공모",
+        "link": "https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1283512",
+        "agency": "한국연구재단",
+        "date": "2026.11.13",
+        "appPeriod": "2026.11.13 ~ 2026.11.26",
+        "appBegin": "2026.11.13",
+        "appDue": "2026.11.26",
+        "amount": "50백만원"
+    },
+    {
+        "department": "산업통상부",
+        "title": "(기정원 연계) 2027년도 제조AX분야 산업기술R&D사업 과제기획을 위한 기술수요조사",
+        "link": "https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1283097",
+        "agency": "한국산업기술기획평가원",
+        "date": "2026.11.13",
+        "appPeriod": "2026.11.16 ~ 2026.11.27",
+        "appBegin": "2026.11.16",
+        "appDue": "2026.11.27",
+        "amount": "0원"
+    },
+    {
+        "department": "과학기술정보통신부",
         "title": "「K-문샷 BCI미션 신규사업 기획을 위한 영장류 기능 뇌지도 구축 기획 연구」 정책연구과제 공고",
         "link": "https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1283030",
         "agency": "국가과학기술연구회",
